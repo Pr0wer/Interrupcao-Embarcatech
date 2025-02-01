@@ -47,7 +47,7 @@ const uint8_t nums[10][MATRIZ_ROWS][MATRIZ_COLS] =
     {0, 1, 1, 0, 0},
     {0, 0, 1, 0, 0}, // Algarismo 1
     {0, 0, 1, 0, 0},
-    {0, 0, 1, 0, 0}
+    {0, 1, 1, 1, 0}
   },
   {
     {0, 1, 1, 1, 0},
@@ -103,7 +103,7 @@ const uint8_t nums[10][MATRIZ_ROWS][MATRIZ_COLS] =
     {0, 1, 0, 1, 0},
     {0, 1, 1, 1, 0}, // Algarismo 9
     {0, 0, 0, 1, 0},
-    {0, 0, 0, 1, 0}
+    {0, 1, 1, 1, 0}
   }
 };
 
@@ -174,6 +174,7 @@ int main()
   }
 }
 
+// Inicializa a matriz de LED WS2812B. Baseado no exemplo neopixel_pio do repo BitDogLab
 void inicializarMatriz()
 {
   // Cria PIO
@@ -194,9 +195,7 @@ void inicializarMatriz()
   // Limpa buffer da matriz
   for (uint i = 0; i < MATRIZ_SIZE; i++) 
   {
-    matriz[i].r = 0;
-    matriz[i].g = 0;
-    matriz[i].b = 0;
+    alterarLed(i, 0, 0, 0);
   }
 }
 
@@ -222,6 +221,7 @@ void gpio_irq_handler(uint gpio, uint32_t events)
   }
 }
 
+// Adiciona um determinado digito ao buffer da matriz de LEDs
 void atualizarDigito(uint8_t digito)
 {
   // Obter frame do digito desejado
@@ -235,7 +235,7 @@ void atualizarDigito(uint8_t digito)
       // Obter indíce correto de acordo com o modo de envio de informação do WS2812B e adicionar ao buffer
       uint index = obterPosicao(linha, coluna);
 
-      // Ligar LED dessa posição caso seja parte do digito
+      // Liga o LED na cor definida caso o valor lógico desse pixel seja 1 (LED aceso)
       if (frame[linha][coluna])
       {
         alterarLed(index, corDigito.r, corDigito.g, corDigito.b);
@@ -248,6 +248,7 @@ void atualizarDigito(uint8_t digito)
   }
 }
 
+// Atualiza a matriz de LEDs com o conteúdo do buffer
 void atualizarMatriz()
 {
   for (int i = 0; i < MATRIZ_SIZE; i++)
@@ -257,9 +258,10 @@ void atualizarMatriz()
     pio_sm_put_blocking(np_pio, sm, matriz[i].b);
 
   }
-  sleep_us(100);
+  sleep_us(100); // Espera 100us para a próxima mudança, de acordo com o datasheet
 }
 
+// Altera a cor de um LED no buffer da matriz
 void alterarLed(int i, uint8_t red, uint8_t green, uint8_t blue)
 {
   matriz[i].r = red;
@@ -267,6 +269,7 @@ void alterarLed(int i, uint8_t red, uint8_t green, uint8_t blue)
   matriz[i].b = blue;
 }
 
+// Converte a posição de um array bidimensional para a posição correspondente na matriz de LED
 uint obterPosicao(uint linha, uint coluna)
 { 
   // Inverter linha
@@ -284,6 +287,6 @@ uint obterPosicao(uint linha, uint coluna)
     colunaMatriz = coluna;
   }
 
-  // Converter indíce de array bidimensional para unidimensional e retornar
+  // Converter novo indíce de array bidimensional para unidimensional e retornar valor
   return MATRIZ_ROWS * linhaMatriz + colunaMatriz;
 }
